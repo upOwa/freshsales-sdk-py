@@ -160,6 +160,10 @@ class APIBase:
         res = self._request_generic(requests.delete, path=f'/{self.resource_type}/{id}/forget')
         return res
 
+    def bulk_delete(self, ids):
+        return self._request_generic(requests.post, path=f'/{self.resource_type}/bulk_destroy', 
+                                     data={"selected_ids": ids})
+
 
 class Contacts(APIBase):
     def __init__(self, domain, api_key):
@@ -204,10 +208,6 @@ class Contacts(APIBase):
     def get_appointments(self, id):
         return self._get_generic(f'/contacts/{id}/appointments')['appointments']
 
-    def bulk_delete(self, ids):
-        return self._request_generic(requests.post, '/contacts/bulk_destroy', 
-                                     data={"selected_ids": ids})
-
 
 class Accounts(APIBase):
     def __init__(self, domain, api_key):
@@ -229,6 +229,13 @@ class Accounts(APIBase):
         if 'industry_type_id' in obj:
             industry_type = APIBase._find_obj_by_id(objs=industry_types, id=obj['industry_type_id'])
             obj['industry_type'] = industry_type
+
+    def bulk_delete(self, ids, delete_associated_contacts_deals=False):
+        return self._request_generic(requests.post, '/accounts/bulk_destroy', 
+                                     data={
+                                         "selected_ids": ids,
+                                         "delete_associated_contacts_deals": delete_associated_contacts_deals
+                                     })
 
 
 class Deals(APIBase):
