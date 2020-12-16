@@ -21,20 +21,25 @@ class APIBase:
         if not self.default_params:
             self.default_params = {}
 
-    def _get_generic(self, path, params=None):
-        """Create a HTTP GET request.
+    def _request_generic(self, method, path, params=None, data=None):
+        """Create a HTTP request.
 
         Parameters:
-            params (dict): HTTP GET parameters for the wanted API.
+            method (callback): method to call (e.g. `requests.get`, `requests.post`)
             path (str): path for the wanted API. Should start with a '/'
+            params (dict): HTTP GET parameters for the wanted API.
+            data (Any): HTTP POST payload as Python/JSON object for the wanted API.
 
         Returns:
-            A response from the request (dict).
+            A response from the request (dict, or bool in some cases like deleting a contact).
         """
+        assert method is not None
         assert path is not None
         assert path.startswith('/')
         if not params:
             params = {}
+        if not data:
+            data = {}
         api_headers = {'Authorization': f'Token token={self.api_key}'}
         api_params = copy.deepcopy(self.default_params)
 
@@ -49,12 +54,13 @@ class APIBase:
 
                 api_params[k] = p
 
-        api_path = f'https://{self.domain}.freshsales.io{path}'
-        logger.debug('calling get %s passing params %s', api_path, api_params)
-        response = requests.get(
+        api_path = f'https://{self.domain}.freshsales.io/api{path}'
+        logger.debug('calling %s %s passing params %s', method.__name__, api_path, api_params)
+        response = method(
             url=api_path,
             headers=api_headers,
-            params=api_params
+            params=api_params,
+            json=data
         )
         # raise exception if not 200
         response.raise_for_status()
@@ -62,6 +68,18 @@ class APIBase:
         res = json.loads(response.text)
 #        logger.debug('res = %s', res)
         return res
+
+    def _get_generic(self, path, params=None):
+        """Create a HTTP GET request.
+
+        Parameters:
+            params (dict): HTTP GET parameters for the wanted API.
+            path (str): path for the wanted API. Should start with a '/'
+
+        Returns:
+            A response from the request (dict).
+        """
+        return self._request_generic(requests.get, path, params)
 
     def _get_views(self):
         return self._get_generic(path=f'/{self.resource_type}/filters')['filters']
@@ -124,6 +142,24 @@ class APIBase:
     def get(self, id):
         return self._get_by_id(id=id)
 
+    def create(self, data):
+        res = self._request_generic(requests.post, path=f'/{self.resource_type}', 
+                                    data={self.resource_type_singular: data})
+        return res
+
+    def update(self, id, data):
+        res = self._request_generic(requests.put, path=f'/{self.resource_type}/{id}', 
+                                    data={self.resource_type_singular: data})
+        return res
+
+    def delete(self, id):
+        res = self._request_generic(requests.delete, path=f'/{self.resource_type}/{id}')
+        return res
+
+    def forget(self, id):
+        res = self._request_generic(requests.delete, path=f'/{self.resource_type}/{id}/forget')
+        return res
+
 
 class Contacts(APIBase):
     def __init__(self, domain, api_key):
@@ -167,6 +203,10 @@ class Contacts(APIBase):
 
     def get_appointments(self, id):
         return self._get_generic(f'/contacts/{id}/appointments')['appointments']
+
+    def bulk_delete(self, ids):
+        return self._request_generic(requests.post, '/contacts/bulk_destroy', 
+                                     data={"selected_ids": ids})
 
 
 class Accounts(APIBase):
