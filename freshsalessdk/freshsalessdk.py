@@ -8,6 +8,34 @@ import requests
 logger = logging.getLogger(__name__)
 
 
+class Configuration:
+    def __init__(self, domain, api_key):
+        self.domain = domain
+        self.api_key = api_key
+
+    def _get(self, name: str):
+        api_headers = {'Authorization': f'Token token={self.api_key}'}
+
+        api_path = f'https://{self.domain}.freshsales.io/api/selector/{name}'
+        response = requests.get(
+            url=api_path,
+            headers=api_headers
+        )
+        # raise exception if not 200
+        response.raise_for_status()
+
+        return json.loads(response.text)
+
+    def owners(self):
+        return self._get('owners')['users']
+
+    def sales_activity_types(self):
+        return self._get('sales_activity_types')['sales_activity_types']
+
+    def sales_activity_outcomes(self, id):
+        return self._get(f'sales_activity_types/{id}/sales_activity_outcomes')['sales_activity_outcomes']
+
+
 class APIBase:
     def __init__(self, resource_type, domain, api_key, resource_type_singular=None, default_params=None):
         self.resource_type = resource_type
@@ -243,6 +271,7 @@ class Leads(APIBase):
 
 class FreshsalesSDK:
     def __init__(self, domain, api_key):
+        self.configuration = Configuration(domain=domain, api_key=api_key)
         self.contacts = Contacts(domain=domain, api_key=api_key)
         self.accounts = Accounts(domain=domain, api_key=api_key)
         self.deals = Deals(domain=domain, api_key=api_key)
