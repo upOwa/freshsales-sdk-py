@@ -288,9 +288,55 @@ class Leads(APIBase):
             lead_stage = APIBase._find_obj_by_id(objs=lead_stages, id=obj['lead_stage_id'])
             obj['lead_stage'] = lead_stage
 
+
+class SalesActivities(APIBase):
+    def __init__(self, domain, api_key):
+        default_params = {}
+        super().__init__(domain=domain, api_key=api_key,
+                         resource_type='sales_activities', resource_type_singular='sales_activity', default_params=default_params)
+
+    def _normalize(self, obj, container):
+        pass
+
+    def forget(self, id):
+        return NotImplementedError
+
+
+class Tasks(APIBase):
+    def __init__(self, domain, api_key):
+        default_params = {}
+        super().__init__(domain=domain, api_key=api_key,
+                         resource_type='tasks', default_params=default_params)
+
+    def _normalize(self, obj, container):
+        pass
+
+    def forget(self, id):
+        return NotImplementedError
+
+    def done(self, id):
+        return self.update(id, {"status": 1})
+
+
+class Notes(APIBase):
+    def __init__(self, domain, api_key):
+        default_params = {}
+        super().__init__(domain=domain, api_key=api_key,
+                         resource_type='notes', default_params=default_params)
+
+    def _normalize(self, obj, container):
+        pass
+
+    def forget(self, id):
+        return NotImplementedError
+
+
 class FreshsalesSDK:
     def __init__(self, domain, api_key):
         self.contacts = Contacts(domain=domain, api_key=api_key)
         self.accounts = Accounts(domain=domain, api_key=api_key)
         self.deals = Deals(domain=domain, api_key=api_key)
         self.leads = Leads(domain=domain, api_key=api_key)
+        self.notes = Notes(domain=domain, api_key=api_key)
+        self.tasks = Tasks(domain=domain, api_key=api_key)
+        self.sales_activities = SalesActivities(domain=domain, api_key=api_key)
