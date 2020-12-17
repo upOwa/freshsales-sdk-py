@@ -86,7 +86,7 @@ class APIBase:
         num = 0
         while True:
             start_time = time.time()
-            params = {'page': page}
+            params = {'page': page, 'per_page': 100}
             res = self._get_generic(
                 path=f'/{self.resource_type}/view/{view_id}', params=params)
             total_pages = res['meta']['total_pages']
