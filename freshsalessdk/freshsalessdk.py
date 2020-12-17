@@ -29,6 +29,27 @@ class Configuration:
     def owners(self):
         return self._get('owners')['users']
 
+    def deal_stages(self):
+        return self._get('deal_stages')['deal_stages']
+
+    def currencies(self):
+        return self._get('currencies')['currencies']
+
+    def deal_reasons(self):
+        return self._get('deal_reasons')['deal_reasons']
+
+    def deal_types(self):
+        return self._get('deal_types')['deal_types']
+
+    def deal_pipelines(self):
+        return self._get('deal_pipelines')['deal_pipelines']
+
+    def deal_stages(self):
+        return self._get('deal_stages')['deal_stages']
+
+    def deal_pipeline_stages(self, pipeline_id):
+        return self._get(f'deal_pipelines/{pipeline_id}/deal_stages')['deal_stages']
+
     def sales_activity_types(self):
         return self._get('sales_activity_types')['sales_activity_types']
 
